@@ -53,6 +53,16 @@ public class Game {
         tableCards.add(topCard);
     }
 
+    public void playCard(Player player, Cards card) {
+        tableCards.add(card);
+        player.removeCard(card);
+    }
+
+    public void drawCard(Player player) {
+        Cards card = deckCards.remove(0);
+        player.addCard(card);
+    }
+
     public ArrayList<Player> getPlayers() {
         return players;
     }

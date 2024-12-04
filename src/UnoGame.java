@@ -19,6 +19,26 @@ public class UnoGame {
         ArrayList<Cards> tableCards = game.getTableCards();
         Player you = players.get(0);
 
+
+        // Kartenrückseite für andere Spieler
+        ImageIcon cardBackImageIcon = new ImageIcon("src/unocards/uno_back.png");
+        Image cardBackImage = cardBackImageIcon.getImage();
+        Image scaledCardBackImage = cardBackImage.getScaledInstance(60, 100, Image.SCALE_SMOOTH);
+        Icon scaledCardBackImageIcon = new ImageIcon(scaledCardBackImage);
+
+        // Kartenrückseite Ziehstapel
+
+        Image scaledDeckCardBackImage = cardBackImage.getScaledInstance(120, 200, Image.SCALE_SMOOTH);
+        Icon scaledDeckCardBackImageIcon = new ImageIcon(scaledDeckCardBackImage);
+
+        // Ablagestapel karte
+        Cards topCard = tableCards.get(0);
+        ImageIcon topCardImageIcon = new ImageIcon(topCard.getCardImage());
+        Image topCardImage = topCardImageIcon.getImage();
+        Image scaledTopCardImage = topCardImage.getScaledInstance(120, 200, Image.SCALE_SMOOTH);
+        Icon scaledTopCardImageIcon = new ImageIcon(scaledTopCardImage);
+
+
         // Norden
         JPanel northPanel = new JPanel();
         northPanel.setBackground(Color.RED);
@@ -122,23 +142,20 @@ public class UnoGame {
 
 
         for (int i = 0; i < 7; i++) {
-            JButton card = new JButton();
+            JButton card = new JButton(scaledCardBackImageIcon);
             card.setPreferredSize(new Dimension(60, 100));
-            card.setBackground(Color.WHITE);
             northCardPanel.add(card);
         }
 
         for (int i = 0; i < 7; i++) {
-            JButton card = new JButton();
+            JButton card = new JButton(scaledCardBackImageIcon);
             card.setPreferredSize(new Dimension(60, 100));
-            card.setBackground(Color.WHITE);
             westCardPanel.add(card);
         }
 
         for (int i = 0; i < 7; i++) {
-            JButton card = new JButton();
+            JButton card = new JButton(scaledCardBackImageIcon);
             card.setPreferredSize(new Dimension(60, 100));
-            card.setBackground(Color.WHITE);
             eastCardPanel.add(card);
         }
 // Zentrum
@@ -152,24 +169,16 @@ public class UnoGame {
         gbc.anchor = GridBagConstraints.CENTER; // Center the components
 
 // Draw pile
-        JPanel drawPile = new JPanel();
+        JLabel drawPile = new JLabel();
         drawPile.setPreferredSize(new Dimension(120, 200));
-        drawPile.setBackground(Color.WHITE);
-        drawPile.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
-        ));
+        drawPile.setIcon(scaledDeckCardBackImageIcon);
         gbc.gridx = 0;
         centerPanel.add(drawPile, gbc);
 
 // Discard pile
-        JPanel discardPile = new JPanel();
+        JLabel discardPile = new JLabel(scaledTopCardImageIcon);
         discardPile.setPreferredSize(new Dimension(120, 200));
         discardPile.setBackground(Color.WHITE);
-        discardPile.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.BLACK),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)
-        ));
         gbc.gridx = 1;
         centerPanel.add(discardPile, gbc);
 
