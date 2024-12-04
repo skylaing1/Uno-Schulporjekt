@@ -32,7 +32,7 @@ public class Game {
             deckCards.add(card);
         }
         for (int x = 0; x < 2; x++) {
-            for (int i = 1; i < 3; i++) {
+            for (int i = 13; i < 15; i++) {
                 Cards card = new Cards("wild", i);
                 Cards card2 = new Cards("wild", i);
                 deckCards.add(card);
@@ -53,14 +53,31 @@ public class Game {
         tableCards.add(topCard);
     }
 
-    public void playCard(Player player, Cards card) {
-        tableCards.add(card);
-        player.removeCard(card);
+    public boolean playCard(Player player, Cards card) {
+        if (card.getCardColour().equals(tableCards.get(0).getCardColour()) || card.getCardValue() == tableCards.get(0).getCardValue() || card.getCardColour().equals("wild")) {
+            tableCards.add(0, card);
+            player.removeCard(card);
+            return true;
+        }
+        return false;
     }
 
-    public void drawCard(Player player) {
-        Cards card = deckCards.remove(0);
-        player.addCard(card);
+    public boolean drawCard(Player player) {
+        if (deckCards.size() > 0 && !checkCardPlayable(player, tableCards.get(0))) {
+            Cards card = deckCards.remove(0);
+            player.addCard(card);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean checkCardPlayable(Player player, Cards topCard) {
+        for (Cards card : player.getPlayerCards()) {
+            if (card.getCardColour().equals(topCard.getCardColour()) || card.getCardValue() == topCard.getCardValue() || card.getCardColour().equals("wild")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public ArrayList<Player> getPlayers() {

@@ -3,6 +3,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class UnoGame {
     public static void main(String[] args) {
@@ -31,12 +32,36 @@ public class UnoGame {
         Image scaledDeckCardBackImage = cardBackImage.getScaledInstance(120, 200, Image.SCALE_SMOOTH);
         Icon scaledDeckCardBackImageIcon = new ImageIcon(scaledDeckCardBackImage);
 
-        // Ablagestapel karte
-        Cards topCard = tableCards.get(0);
-        ImageIcon topCardImageIcon = new ImageIcon(topCard.getCardImage());
-        Image topCardImage = topCardImageIcon.getImage();
-        Image scaledTopCardImage = topCardImage.getScaledInstance(120, 200, Image.SCALE_SMOOTH);
-        Icon scaledTopCardImageIcon = new ImageIcon(scaledTopCardImage);
+
+        // Zentrum
+        JPanel centerPanel = new JPanel();
+        centerPanel.setBackground(Color.GRAY);
+        centerPanel.setLayout(new GridBagLayout());
+        frame.add(centerPanel, BorderLayout.CENTER);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 50, 0, 50); // Increase space between the piles
+        gbc.anchor = GridBagConstraints.CENTER; // Center the components
+
+// Draw pile
+        JButton drawPile = new JButton();
+        drawPile.setPreferredSize(new Dimension(120, 200));
+        drawPile.setIcon(scaledDeckCardBackImageIcon);
+        gbc.gridx = 0;
+        centerPanel.add(drawPile, gbc);
+
+
+// Discard pile
+        JLabel discardPile = new JLabel();
+        discardPile.setPreferredSize(new Dimension(120, 200));
+        gbc.gridx = 1;
+        centerPanel.add(discardPile, gbc);
+
+
+
+        FourColorCircle colorCircle = new FourColorCircle();
+        centerPanel.add(colorCircle, gbc);
+        colorCircle.setVisible(false);
 
 
         // Norden
@@ -84,20 +109,61 @@ public class UnoGame {
         southCardPanel.setPreferredSize(new Dimension(800, 240));
         southPanel.add(southCardPanel);
 
-        ArrayList<Cards> playerCards = you.getPlayerCards();
-        // Parameter für die Karten
-        int totalCards = playerCards.size(); // Anzahl der Karten
+        Cards topCard = tableCards.get(0);
+
+        updateTopCard(discardPile, topCard);
+        updatePlayerCards(you, southCardPanel, topCard, game, discardPile, drawPile);
+
+        for (int i = 0; i < 7; i++) {
+            JLabel card = new JLabel(scaledCardBackImageIcon);
+            card.setPreferredSize(new Dimension(60, 100));
+            northCardPanel.add(card);
+        }
+
+        for (int i = 0; i < 7; i++) {
+            JLabel card = new JLabel(scaledCardBackImageIcon);
+            card.setPreferredSize(new Dimension(60, 100));
+            westCardPanel.add(card);
+        }
+
+        for (int i = 0; i < 7; i++) {
+            JLabel card = new JLabel(scaledCardBackImageIcon);
+            card.setPreferredSize(new Dimension(60, 100));
+            eastCardPanel.add(card);
+        }
+
+        drawPile.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (game.drawCard(you)) {
+                    updatePlayerCards(you, southCardPanel, tableCards.get(0), game, discardPile, drawPile);
+                }
+            }
+        });
+
+
+        frame.setVisible(true);
+    }
+
+
+    private static void updateTopCard(JLabel discardPile, Cards topCard) {
+        ImageIcon topCardImageIcon = new ImageIcon(topCard.getCardImage());
+        Image topCardImage = topCardImageIcon.getImage();
+        Image scaledTopCardImage = topCardImage.getScaledInstance(120, 200, Image.SCALE_SMOOTH);
+        Icon scaledTopCardImageIcon = new ImageIcon(scaledTopCardImage);
+        discardPile.setIcon(scaledTopCardImageIcon);
+    }
+
+    private static void updatePlayerCards(Player player, JPanel southCardPanel, Cards topCard, Game game, JLabel discardPile, JButton drawPile) {
+        southCardPanel.removeAll();
+        ArrayList<Cards> playerCards = player.getPlayerCards();
+        int totalCards = playerCards.size();
         int cardWidth = 90;
         int cardHeight = 150;
-
-        // Verfügbarer Platz für die Karten
         int panelWidth = southCardPanel.getPreferredSize().width;
-        int overlap = Math.max((panelWidth - cardWidth) / (totalCards - 1), 10); // Dynamisches Overlap
-
-        // Referenz für die hervorgehobene Karte
+        int overlap = Math.max((panelWidth - cardWidth) / (totalCards - 1), 10);
         JButton[] cards = new JButton[totalCards];
 
-        // Positionierung der Karten
         for (int i = 0; i < totalCards; i++) {
             Cards currentcard = playerCards.get(i);
             ImageIcon cardImageIcon = new ImageIcon(currentcard.getCardImage());
@@ -105,85 +171,52 @@ public class UnoGame {
             Image scaledCardImage = cardImage.getScaledInstance(cardWidth, cardHeight, Image.SCALE_SMOOTH);
             Icon scaledCardImageIcon = new ImageIcon(scaledCardImage);
             JButton card = new JButton(scaledCardImageIcon);
-            int x = Math.min(i * overlap, panelWidth - cardWidth); // Begrenzung für letzte Karte
+            card.setDisabledIcon(scaledCardImageIcon);
+            int x = Math.min(i * overlap, panelWidth - cardWidth);
             card.setBounds(x, 50, cardWidth, cardHeight);
+            if (Game.checkCardPlayable(player, topCard)) {
+                card.setEnabled(true);
+                drawPile.setEnabled(false);
+            } else {
+                card.setEnabled(false);
+                drawPile.setEnabled(true);
+            }
 
-
-            // MouseListener für Hover-Effekt
             card.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    // Alle anderen Karten bleiben in ihrer ursprünglichen Position
                     for (JButton otherCard : cards) {
-                        otherCard.setBounds(otherCard.getX(), otherCard.getY(), cardWidth, cardHeight); // Zurücksetzen auf Standardgröße// Zurücksetzen der Z-Order
+                        otherCard.setBounds(otherCard.getX(), otherCard.getY(), cardWidth, cardHeight);
                     }
-
-                    // Die aktuelle Karte wird größer und bleibt sichtbar
-                    card.setBounds(card.getX() - 20, card.getY() - 20, cardWidth + 40, cardHeight + 40); // Vergrößern der Karte
+                    card.setBounds(card.getX() - 20, card.getY() - 20, cardWidth + 40, cardHeight + 40);
                     if (southCardPanel.getComponentZOrder(card) != 0) {
-                        southCardPanel.setComponentZOrder(card, southCardPanel.getComponentZOrder(card) - 1); // Bringt die Karte in den Vordergrund
+                        southCardPanel.setComponentZOrder(card, southCardPanel.getComponentZOrder(card) - 1);
                     }
                     southCardPanel.repaint();
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-
-                    // Wenn die Maus die Karte verlässt, wird die Karte wieder kleiner
-                    card.setBounds(card.getX() + 20, card.getY() + 20, cardWidth, cardHeight); // Zurücksetzen der Größe
-                    southCardPanel.setComponentZOrder(card, southCardPanel.getComponentZOrder(card) + 1); // Zurücksetzen der Z-Order
+                    card.setBounds(card.getX() + 20, card.getY() + 20, cardWidth, cardHeight);
+                    southCardPanel.setComponentZOrder(card, southCardPanel.getComponentZOrder(card) + 1);
                     southCardPanel.repaint();
+                }
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (game.playCard(player, currentcard)) {
+                        updatePlayerCards(player, southCardPanel, topCard, game, discardPile, drawPile);
+                        updateTopCard(discardPile, game.getTableCards().get(0));
+                    }
                 }
             });
 
             southCardPanel.add(card);
-            cards[i] = card; // Karte in das Array speichern
+            cards[i] = card;
         }
-
-
-        for (int i = 0; i < 7; i++) {
-            JButton card = new JButton(scaledCardBackImageIcon);
-            card.setPreferredSize(new Dimension(60, 100));
-            northCardPanel.add(card);
-        }
-
-        for (int i = 0; i < 7; i++) {
-            JButton card = new JButton(scaledCardBackImageIcon);
-            card.setPreferredSize(new Dimension(60, 100));
-            westCardPanel.add(card);
-        }
-
-        for (int i = 0; i < 7; i++) {
-            JButton card = new JButton(scaledCardBackImageIcon);
-            card.setPreferredSize(new Dimension(60, 100));
-            eastCardPanel.add(card);
-        }
-// Zentrum
-        JPanel centerPanel = new JPanel();
-        centerPanel.setBackground(Color.GRAY);
-        centerPanel.setLayout(new GridBagLayout());
-        frame.add(centerPanel, BorderLayout.CENTER);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 50, 0, 50); // Increase space between the piles
-        gbc.anchor = GridBagConstraints.CENTER; // Center the components
-
-// Draw pile
-        JLabel drawPile = new JLabel();
-        drawPile.setPreferredSize(new Dimension(120, 200));
-        drawPile.setIcon(scaledDeckCardBackImageIcon);
-        gbc.gridx = 0;
-        centerPanel.add(drawPile, gbc);
-
-// Discard pile
-        JLabel discardPile = new JLabel(scaledTopCardImageIcon);
-        discardPile.setPreferredSize(new Dimension(120, 200));
-        discardPile.setBackground(Color.WHITE);
-        gbc.gridx = 1;
-        centerPanel.add(discardPile, gbc);
-
-
-
-        frame.setVisible(true);
+        southCardPanel.repaint();
+        southCardPanel.revalidate();
     }
+
 }
+
