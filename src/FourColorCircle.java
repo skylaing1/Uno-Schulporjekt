@@ -4,28 +4,46 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class FourColorCircle extends JPanel {
+    private int highlightedSegment = -1;
+    private int segmentClicked = -1;
 
     public FourColorCircle() {
-        setPreferredSize(new Dimension(400, 400));
+        setPreferredSize(new Dimension(200, 200));
         setOpaque(false);
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int x = e.getX();
-                int y = e.getY();
-                int centerX = getWidth() / 2;
-                int centerY = getHeight() / 2;
-                double angle = Math.atan2(y - centerY, x - centerX);
-
-                if (angle < 0) {
-                    angle += 2 * Math.PI;
-                }
-
-                int segment = (int) (angle / (Math.PI / 2));
-                System.out.println("Segment clicked: " + segment);
+                segmentClicked = getSegment(e.getX(), e.getY());
+                System.out.println("Segment clicked: " + segmentClicked);
             }
         });
 
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int segment = getSegment(e.getX(), e.getY());
+                if (segment != highlightedSegment) {
+                    highlightedSegment = segment;
+                    repaint();
+                }
+            }
+        });
+    }
+
+    private int getSegment(int x, int y) {
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+        double angle = Math.atan2(y - centerY, x - centerX);
+
+        if (angle < 0) {
+            angle += 2 * Math.PI;
+        }
+
+        return (int) (angle / (Math.PI / 2));
+    }
+
+    public int getSegmentClicked() {
+        return segmentClicked;
     }
 
     @Override
@@ -39,20 +57,21 @@ public class FourColorCircle extends JPanel {
         int centerX = width / 2;
         int centerY = height / 2;
 
-        g2d.setColor(Color.RED);
-        g2d.fillArc(centerX - radius, centerY - radius, diameter, diameter, 0, 90);
-
-        g2d.setColor(Color.GREEN);
-        g2d.fillArc(centerX - radius, centerY - radius, diameter, diameter, 90, 90);
-
-        g2d.setColor(Color.BLUE);
-        g2d.fillArc(centerX - radius, centerY - radius, diameter, diameter, 180, 90);
-
-        g2d.setColor(Color.YELLOW);
-        g2d.fillArc(centerX - radius, centerY - radius, diameter, diameter, 270, 90);
+        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
+        for (int i = 0; i < 4; i++) {
+            if (i == highlightedSegment) {
+                g2d.setColor(colors[i].brighter());
+            } else {
+                g2d.setColor(colors[i]);
+            }
+            g2d.fillArc(centerX - radius, centerY - radius, diameter, diameter, i * 90, 90);
+        }
 
         g2d.setColor(Color.BLACK);
         g2d.setStroke(new BasicStroke(5));
         g2d.drawOval(centerX - radius, centerY - radius, diameter, diameter);
+    }
+    public void setSegmentClicked(int segmentClicked) {
+        this.segmentClicked = segmentClicked;
     }
 }

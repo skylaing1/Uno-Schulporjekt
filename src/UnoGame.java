@@ -47,6 +47,7 @@ public class UnoGame {
         JButton drawPile = new JButton();
         drawPile.setPreferredSize(new Dimension(120, 200));
         drawPile.setIcon(scaledDeckCardBackImageIcon);
+        drawPile.setEnabled(false);
         gbc.gridx = 0;
         centerPanel.add(drawPile, gbc);
 
@@ -111,8 +112,8 @@ public class UnoGame {
 
         Cards topCard = tableCards.get(0);
 
-        updateTopCard(discardPile, topCard);
-        updatePlayerCards(you, southCardPanel, topCard, game, discardPile, drawPile);
+        updateTopCardImage(discardPile, topCard);
+        updatePlayerCards(you, southCardPanel, topCard, game, discardPile, drawPile, colorCircle, centerPanel);
 
         for (int i = 0; i < 7; i++) {
             JLabel card = new JLabel(scaledCardBackImageIcon);
@@ -136,7 +137,7 @@ public class UnoGame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (game.drawCard(you)) {
-                    updatePlayerCards(you, southCardPanel, tableCards.get(0), game, discardPile, drawPile);
+                    updatePlayerCards(you, southCardPanel, tableCards.get(0), game, discardPile, drawPile, colorCircle, centerPanel);
                 }
             }
         });
@@ -146,7 +147,7 @@ public class UnoGame {
     }
 
 
-    private static void updateTopCard(JLabel discardPile, Cards topCard) {
+    private static void updateTopCardImage(JLabel discardPile, Cards topCard) {
         ImageIcon topCardImageIcon = new ImageIcon(topCard.getCardImage());
         Image topCardImage = topCardImageIcon.getImage();
         Image scaledTopCardImage = topCardImage.getScaledInstance(120, 200, Image.SCALE_SMOOTH);
@@ -154,7 +155,7 @@ public class UnoGame {
         discardPile.setIcon(scaledTopCardImageIcon);
     }
 
-    private static void updatePlayerCards(Player player, JPanel southCardPanel, Cards topCard, Game game, JLabel discardPile, JButton drawPile) {
+    private static void updatePlayerCards(Player player, JPanel southCardPanel, Cards topCard, Game game, JLabel discardPile, JButton drawPile, FourColorCircle colorCircle, JPanel centerPanel) {
         southCardPanel.removeAll();
         ArrayList<Cards> playerCards = player.getPlayerCards();
         int totalCards = playerCards.size();
@@ -163,6 +164,7 @@ public class UnoGame {
         int panelWidth = southCardPanel.getPreferredSize().width;
         int overlap = Math.max((panelWidth - cardWidth) / (totalCards - 1), 10);
         JButton[] cards = new JButton[totalCards];
+        boolean disabledDrawPile = true;
 
         for (int i = 0; i < totalCards; i++) {
             Cards currentcard = playerCards.get(i);
@@ -174,12 +176,14 @@ public class UnoGame {
             card.setDisabledIcon(scaledCardImageIcon);
             int x = Math.min(i * overlap, panelWidth - cardWidth);
             card.setBounds(x, 50, cardWidth, cardHeight);
-            if (Game.checkCardPlayable(player, topCard)) {
-                card.setEnabled(true);
-                drawPile.setEnabled(false);
-            } else {
-                card.setEnabled(false);
-                drawPile.setEnabled(true);
+
+            if (disabledDrawPile) {
+                if (Game.checkCardPlayable(currentcard, topCard)) {
+                    drawPile.setEnabled(false);
+                    disabledDrawPile = false;
+                } else {
+                    drawPile.setEnabled(true);
+                }
             }
 
             card.addMouseListener(new MouseAdapter() {
@@ -204,19 +208,66 @@ public class UnoGame {
 
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (game.playCard(player, currentcard)) {
-                        updatePlayerCards(player, southCardPanel, topCard, game, discardPile, drawPile);
-                        updateTopCard(discardPile, game.getTableCards().get(0));
+                    int i = game.playCard(player, currentcard);
+                    if (i > 0) {
+                        if (i == 2) {
+                            JOptionPane.showMessageDialog(null, "You won!");
+                        }
+                        if (i == 5) {
+                            colorCircle.setVisible(true);
+                            discardPile.setVisible(false);
+                            drawPile.setEnabled(false);
+                            centerPanel.repaint();
+                            centerPanel.revalidate();
+
+                            new SwingWorker<Void, Void>() {
+                                @Override
+                                protected Void doInBackground() throws Exception {
+                                    while (colorCircle.getSegmentClicked() == -1) {
+                                        Thread.sleep(100);
+                                    }
+                                    return null;
+                                }
+
+                                @Override
+                                protected void done() {
+                                    //get Topcard
+                                    Cards topCard = game.getTableCards().get(game.getTableCards().size() - 1);
+                                    switch (colorCircle.getSegmentClicked()) {
+                                        case 0:
+                                            topCard.setWildColour("red");
+                                            System.out.println("Red");
+                                            break;
+                                        case 1:
+                                            topCard.setWildColour("green");
+                                            System.out.println("Green");
+                                            break;
+                                        case 2:
+                                            topCard.setWildColour("blue");
+                                            System.out.println("Blue");
+                                            break;
+                                        case 3:
+                                            topCard.setWildColour("yellow");
+                                            System.out.println("Yellow");
+                                            break;
+                                    }
+                                    colorCircle.setVisible(false);
+                                    colorCircle.setSegmentClicked(-1);
+                                    discardPile.setVisible(true);
+                                    updateTopCardImage(discardPile, topCard);
+                                    updatePlayerCards(player, southCardPanel, topCard, game, discardPile, drawPile, colorCircle, centerPanel);
+                                }
+                            }.execute();
+                        }
+                        updateTopCardImage(discardPile, currentcard);
+                        updatePlayerCards(player, southCardPanel, topCard, game, discardPile, drawPile , colorCircle, centerPanel);
                     }
                 }
             });
-
             southCardPanel.add(card);
             cards[i] = card;
         }
         southCardPanel.repaint();
         southCardPanel.revalidate();
     }
-
 }
-
