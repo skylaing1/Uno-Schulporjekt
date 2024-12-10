@@ -51,11 +51,15 @@ public class Game {
         Collections.shuffle(deckCards);
 
         // Deal cards to players
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 7; i++) {
              for (Player player : players) {
                 Cards card = deckCards.remove(0);
                 player.addCard(card);
             }
+        }
+
+        while (deckCards.get(0).getCardValue() > 9) {
+            Collections.shuffle(deckCards);
         }
         // Place top card on table
         Cards topCard = deckCards.remove(0);
@@ -74,10 +78,10 @@ public class Game {
 
         currentPlayer = players.get(playerIndex);
         if (currentPlayer.getIsBot()) {
-            // Bot-Logik
 
             System.out.println("Bot: " + currentPlayer.getPlayerName());
-            botMove(currentPlayer, tableCards.get(tableCards.size() - 1));
+          //botMove(currentPlayer, tableCards.get(tableCards.size() - 1));
+
         }
         System.out.println("Aktueller Spieler: " + playerIndex);
     }
@@ -100,39 +104,39 @@ public class Game {
             if (card.getCardValue() == 10) {
                 player.addCard(deckCards.remove(0));
                 player.addCard(deckCards.remove(0));
-                nextPlayer("draw2");
+                //nextPlayer("draw2");
             }
             if (player.getPlayerCards().isEmpty()) {
                 return 2;
             }
             if (card.getCardValue() == 11) {
-                nextPlayer("reverse");
+                //nextPlayer("reverse");
                 return 3;
             }
             if (card.getCardValue() == 12) {
-                nextPlayer("skip");
+                //nextPlayer("skip");
                 return 4;
             }
             if (card.getCardValue() == 13) {
-                nextPlayer("nothing");
+                //nextPlayer("nothing");
                 return 5;
             }
             if (card.getCardValue() == 14) {
-                nextPlayer("draw4");
+                //nextPlayer("draw4");
                 player.addCard(deckCards.remove(0));
                 player.addCard(deckCards.remove(0));
                 player.addCard(deckCards.remove(0));
                 player.addCard(deckCards.remove(0));
                 return 5;
             }
-            nextPlayer("nothing");
+            //nextPlayer("nothing");
             return 1;
         }
         return 0;
     }
 
     public boolean drawCard(Player player) {
-        if (deckCards.size() > 0 && !checkAllCardPlayable(player, tableCards.get(tableCards.size() - 1))) {
+        if (!checkAllCardPlayable(player, tableCards.get(tableCards.size() - 1))) {
             Cards card = deckCards.remove(0);
             player.addCard(card);
             return true;
@@ -197,7 +201,13 @@ public class Game {
         }
         Collections.shuffle(playableCards);
         Cards card = playableCards.get(0);
-        playCard(currentPlayer, card);
+
+        if (playCard(currentPlayer, card) == 5) {
+            String[] colours = {"red", "blue", "green", "yellow"};
+            int random = (int) (Math.random() * 4);
+            card.setWildColour(colours[random]);
+        }
+
 
     }
 

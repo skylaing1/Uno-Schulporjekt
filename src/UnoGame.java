@@ -155,6 +155,22 @@ public class UnoGame {
         discardPile.setIcon(scaledTopCardImageIcon);
     }
 
+    private void updateOtherPlayersDeck(JPanel panel, ArrayList<Player> players, int playerIndex, Icon scaledCardBackImageIcon) {
+        panel.removeAll();
+        for (Player player : players) {
+            if (player != players.get(playerIndex)) {
+                for (int j = player.getCardCount(); j > 0; j--) {
+                    JLabel card = new JLabel(scaledCardBackImageIcon);
+                    card.setPreferredSize(new Dimension(60, 100));
+                    panel.add(card);
+
+                }
+            }
+        }
+        panel.repaint();
+        panel.revalidate();
+    }
+
     private static void updatePlayerCards(Player player, JPanel southCardPanel, Cards topCard, Game game, JLabel discardPile, JButton drawPile, FourColorCircle colorCircle, JPanel centerPanel) {
         southCardPanel.removeAll();
         ArrayList<Cards> playerCards = player.getPlayerCards();
@@ -235,20 +251,20 @@ public class UnoGame {
                                     Cards topCard = game.getTableCards().get(game.getTableCards().size() - 1);
                                     switch (colorCircle.getSegmentClicked()) {
                                         case 0:
-                                            topCard.setWildColour("red");
-                                            System.out.println("Red");
-                                            break;
-                                        case 1:
-                                            topCard.setWildColour("green");
-                                            System.out.println("Green");
-                                            break;
-                                        case 2:
                                             topCard.setWildColour("blue");
                                             System.out.println("Blue");
                                             break;
-                                        case 3:
+                                        case 1:
                                             topCard.setWildColour("yellow");
                                             System.out.println("Yellow");
+                                            break;
+                                        case 2:
+                                            topCard.setWildColour("red");
+                                            System.out.println("Red");
+                                            break;
+                                        case 3:
+                                            topCard.setWildColour("green");
+                                            System.out.println("Green");
                                             break;
                                     }
                                     colorCircle.setVisible(false);

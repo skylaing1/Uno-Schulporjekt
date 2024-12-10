@@ -57,7 +57,7 @@ public class FourColorCircle extends JPanel {
         int centerX = width / 2;
         int centerY = height / 2;
 
-        Color[] colors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW};
+        Color[] colors = {Color.GREEN, Color.RED, Color.YELLOW, Color.BLUE};
         for (int i = 0; i < 4; i++) {
             if (i == highlightedSegment) {
                 g2d.setColor(colors[i].brighter());
